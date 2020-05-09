@@ -4,15 +4,39 @@ import Switch from './Switch';
 
 const MAX_CLICKS = 4;
 
-function useToggle() {
-  const [on, setOnState] = React.useState(false);
+const INITIAL_STATE = {
+  on: false
+}
 
-  const toggle = () => setOnState(o => !o);
-  const setOn = () => setOnState(true);
-  const setOff = () => setOnState(false);
+const ACTION_TYPES = {
+  ON: 'ON',
+  OFF: 'OFF',
+  TOGGLE: 'TOGGLE',
+}
+
+const actionHandlers = {
+  [ACTION_TYPES.ON]: state => ({ ...state, on: true }),
+  [ACTION_TYPES.OFF]: state => ({ ...state, on: false }),
+  [ACTION_TYPES.TOGGLE]: state => ({ ...state, on: !state.on })
+}
+
+function toggleReducer(state, action) {
+  const handler = actionHandlers[action.type]
+  if (!handler) throw new Error(`Unhandled type: ${action.type}`);
+  return handler(state, action);
+}
+
+function useToggle() {
+  const [{ on }, dispatch] = React.useReducer(toggleReducer, INITIAL_STATE);
+
+  const toggle = () => dispatch({ type: useToggle.types.TOGGLE });
+  const setOn = () => dispatch({ type: useToggle.types.ON });
+  const setOff = () => dispatch({ type: useToggle.types.OFF });
 
   return { on, toggle, setOn, setOff }
 }
+
+useToggle.types = ACTION_TYPES;
 
 function Toggle() {
   const [clicskSinceReset, setClicksSinceReset] = React.useState(0);

@@ -26,8 +26,8 @@ function toggleReducer(state, action) {
   return handler(state, action);
 }
 
-function useToggle() {
-  const [{ on }, dispatch] = React.useReducer(toggleReducer, INITIAL_STATE);
+function useToggle({ reducer = toggleReducer } = {}) {
+  const [{ on }, dispatch] = React.useReducer(reducer, INITIAL_STATE);
 
   const toggle = () => dispatch({ type: useToggle.types.TOGGLE });
   const setOn = () => dispatch({ type: useToggle.types.ON });
@@ -42,7 +42,14 @@ function Toggle() {
   const [clicskSinceReset, setClicksSinceReset] = React.useState(0);
   const tooManyClicks = clicskSinceReset >= MAX_CLICKS;
 
-  const { on, toggle, setOn, setOff } = useToggle();
+  const { on, toggle, setOn, setOff } = useToggle({
+    reducer(state, action) {
+      const changes = toggleReducer(state, action);
+      return (tooManyClicks && action.type === useToggle.types.TOGGLE)
+        ? { ...changes, on: state.on }
+        : changes;
+    }
+  });
 
   const reset = () => setClicksSinceReset(0);
 
@@ -59,7 +66,9 @@ function Toggle() {
       </div>
 
       <Switch on={on} onClick={handleClick} />
-      {tooManyClicks && <Button onClick={reset}>Reset</Button>}
+      {
+        tooManyClicks && <Button onClick={reset}>Reset</Button>
+      }
     </div>
   );
 }
